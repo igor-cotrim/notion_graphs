@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# notion-graphs
 
-## Getting Started
+Embeddable charts generated from Notion databases. A Next.js app deployable to Vercel that:
 
-First, run the development server:
+- Reads rows from one Notion database (per chart) via the official API
+- Aggregates them (group + sum/count/avg) and renders pie / bar / line charts with Recharts
+- Serves each chart at a signed `/embed/<token>` URL designed to be embedded in Notion
+- Refreshes data via ISR (`revalidate=60s`)
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.local.example .env.local
+# fill NOTION_TOKEN, EMBED_SECRET, NEXT_PUBLIC_BASE_URL
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Generate `EMBED_SECRET`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+openssl rand -hex 32
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Notion integration
 
-## Learn More
+1. Create an internal integration: <https://www.notion.so/my-integrations> → copy the `secret_...` token into `NOTION_TOKEN`.
+2. Open each Notion database you want to chart → `...` menu → **Connections** → connect your integration.
+3. Copy the database ID from the page URL: `https://www.notion.so/<workspace>/<DB-ID>?v=...` (32 hex chars).
 
-To learn more about Next.js, take a look at the following resources:
+## Build a chart
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open `http://localhost:3000/preview` and paste the database ID. Use the sidebar to:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- pick chart type (pie / bar / line)
+- choose **Group by** and **Value** properties
+- pick aggregation (sum / count / avg)
+- toggle filters for `Type` / `Category`
+- set an optional title
 
-## Deploy on Vercel
+When you're happy, click **Generate embed URL**. The sidebar shows the signed URL and an iframe snippet you can copy.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Embed in Notion
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Paste the **URL** (not the `<iframe>` code — Notion strips iframe blocks) into a Notion page → **Create embed**. The page is iframe-friendly via `Content-Security-Policy: frame-ancestors *`.
+
+> ⚠️ **Notion cannot load `http://localhost` URLs.** The embed runs in an iframe served from Notion's HTTPS domain, which blocks unreachable hosts and mixed content. Deploy to Vercel (or any HTTPS host) **before** pasting the link into Notion. For local iteration, use `/preview` in your own browser.
+
+## Deploy
+
+```bash
+vercel
+```
+
+Add `NOTION_TOKEN`, `EMBED_SECRET`, and `NEXT_PUBLIC_BASE_URL` (set to your prod URL) in the Vercel dashboard. Then mint URLs against the prod host from `/preview`.
+
+## How it works
+
+```
+Notion DB ─► dataSources.query (paginated, cached 60s)
+         ─► normalize → applyFilters → groupAndAggregate
+         ─► <ChartRenderer> (recharts, client component)
+```
+
+- `src/lib/notion.ts` — SDK client + property normalizer + `unstable_cache` wrapper.
+- `src/lib/config.ts` — base64url + HMAC-SHA256 token codec.
+- `src/lib/aggregate.ts` — filter + group-by + sum/count/avg.
+- `src/app/embed/[config]/page.tsx` — server component, ISR `revalidate=60`.
+- `src/app/preview/page.tsx` — interactive UI to pick filters and mint URLs.
+- `src/app/actions.ts` — server action that signs configs into embed URLs.
+- `src/components/{Pie,Bar,Line}Chart.tsx` — Recharts wrappers.
+
+## Notes
+
+- Notion API rate limit (~3 req/s) is respected because each `db` is cached for 60s; many concurrent loads of the same chart trigger one query.
+- Anyone with the full URL can render the chart; tokens are only unguessable to prevent forging new ones without `EMBED_SECRET`. Don't use this for sensitive data.
