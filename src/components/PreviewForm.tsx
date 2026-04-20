@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { mintEmbedUrl } from "@/app/actions";
+import { mintEmbedUrl, refreshDb } from "@/app/actions";
+import { type StoredDbState, updateDbState } from "@/lib/savedDbs";
 import type { Aggregation, ChartType, EmbedConfig } from "@/lib/types";
+import { DatabaseTabs } from "./DatabaseTabs";
 
 type Filters = Record<string, string[]>;
 
@@ -32,11 +34,13 @@ export function PreviewForm({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [refreshing, startRefresh] = useTransition();
   const [state, setState] = useState<State>(initial);
   const [minted, setMinted] = useState<{ url: string; iframe: string } | null>(
     null,
   );
   const [mintErr, setMintErr] = useState<string | null>(null);
+  const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
 
   function pushState(next: State) {
     const params = new URLSearchParams();
@@ -48,6 +52,16 @@ export function PreviewForm({
     if (next.title) params.set("title", next.title);
     for (const [k, vs] of Object.entries(next.filters)) {
       if (vs.length) params.append("filter", `${k}:${vs.join(",")}`);
+    }
+    if (next.db) {
+      updateDbState(next.db, {
+        chart: next.chart,
+        group: next.group,
+        value: next.value,
+        agg: next.agg,
+        title: next.title,
+        filters: next.filters,
+      });
     }
     startTransition(() => router.push(`/preview?${params.toString()}`));
   }
@@ -80,9 +94,58 @@ export function PreviewForm({
     }
   }
 
+  function onRefresh() {
+    if (!state.db) return;
+    startRefresh(async () => {
+      await refreshDb(state.db);
+      router.refresh();
+      setRefreshedAt(Date.now());
+    });
+  }
+
+  function selectDb(id: string, savedState?: StoredDbState) {
+    if (savedState) {
+      const next: State = { db: id, ...savedState };
+      setState(next);
+      pushState(next);
+    } else {
+      patch({ db: id });
+    }
+  }
+
+  function startNew() {
+    const blank: State = {
+      db: "",
+      chart: "pie",
+      group: "Category",
+      value: "Value",
+      agg: "sum",
+      title: "",
+      filters: {},
+    };
+    setState(blank);
+    setMinted(null);
+    setMintErr(null);
+    startTransition(() => router.push("/preview"));
+  }
+
   return (
     <aside className="flex h-dvh flex-col gap-4 overflow-y-auto border-r border-zinc-200 bg-zinc-50 p-5 text-sm">
       <h2 className="text-base font-semibold text-zinc-900">Preview</h2>
+
+      <DatabaseTabs
+        activeDb={state.db}
+        currentState={{
+          chart: state.chart,
+          group: state.group,
+          value: state.value,
+          agg: state.agg,
+          title: state.title,
+          filters: state.filters,
+        }}
+        onSelect={selectDb}
+        onNew={startNew}
+      />
 
       <Field label="Database ID">
         <input
@@ -92,6 +155,24 @@ export function PreviewForm({
           onBlur={() => pushState(state)}
           placeholder="2a046fb23fb5720b0905d3939b79f108"
         />
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={!state.db || refreshing}
+          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400 disabled:opacity-50"
+        >
+          <span
+            aria-hidden
+            className={refreshing ? "inline-block animate-spin" : "inline-block"}
+          >
+            ↻
+          </span>
+          {refreshing
+            ? "Refreshing…"
+            : refreshedAt
+              ? "Refreshed"
+              : "Refresh data"}
+        </button>
       </Field>
 
       <Field label="Chart">

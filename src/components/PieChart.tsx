@@ -9,6 +9,8 @@ import {
   Tooltip,
 } from "recharts";
 import type { AggregatedPoint } from "@/lib/types";
+import { totalOf } from "@/lib/format";
+import { ChartTooltip } from "./ChartTooltip";
 import { colorFor } from "./palette";
 
 type SliceLabelProps = {
@@ -45,6 +47,7 @@ function renderSliceLabel(props: unknown) {
 }
 
 export function PieChart({ data }: { data: AggregatedPoint[] }) {
+  const total = totalOf(data);
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RPieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
@@ -66,12 +69,7 @@ export function PieChart({ data }: { data: AggregatedPoint[] }) {
             <Cell key={entry.label} fill={colorFor(i)} />
           ))}
         </Pie>
-        <Tooltip
-          formatter={(v, _name, item) => [
-            Number(v).toLocaleString(),
-            (item as { payload?: { label?: string } })?.payload?.label ?? "",
-          ]}
-        />
+        <Tooltip content={<ChartTooltip total={total} />} />
         <Legend
           verticalAlign="bottom"
           align="center"

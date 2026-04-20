@@ -1,8 +1,13 @@
 "use server";
 
 import { headers } from "next/headers";
+import { updateTag } from "next/cache";
 import { encodeConfig } from "@/lib/config";
 import type { EmbedConfig } from "@/lib/types";
+
+export async function refreshDb(dbId: string): Promise<void> {
+  updateTag(`notion-db:${dbId}`);
+}
 
 export async function mintEmbedUrl(
   config: EmbedConfig,
