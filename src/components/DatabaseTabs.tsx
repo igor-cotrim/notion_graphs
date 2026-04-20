@@ -23,6 +23,8 @@ export function DatabaseTabs({
   const [adding, setAdding] = useState(false);
   const [draftLabel, setDraftLabel] = useState("");
 
+  // localStorage is only available after hydration — populate on mount
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setItems(loadSavedDbs()), []);
 
   function commitAdd() {
@@ -53,16 +55,16 @@ export function DatabaseTabs({
   const isActiveSaved = items.some((i) => i.id === activeDb);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/35">
           Databases
         </span>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onNew}
-            className="text-xs font-medium text-zinc-700 hover:text-zinc-900"
+            className="text-xs font-medium text-white/40 transition hover:text-white/70"
           >
             + New
           </button>
@@ -70,18 +72,18 @@ export function DatabaseTabs({
             <button
               type="button"
               onClick={() => setAdding(true)}
-              className="text-xs font-medium text-zinc-700 hover:text-zinc-900"
+              className="text-xs font-medium text-white/40 transition hover:text-white/70"
             >
-              + Save current
+              + Save
             </button>
           ) : null}
         </div>
       </div>
 
       {items.length === 0 && !adding ? (
-        <p className="text-xs text-zinc-400">
-          No saved databases yet. Paste an ID below and click{" "}
-          <strong>+ Save current</strong> to pin it as a tab.
+        <p className="text-xs leading-relaxed text-white/25">
+          Paste a database ID below and click{" "}
+          <strong className="text-white/40">+ Save</strong> to pin it here.
         </p>
       ) : null}
 
@@ -93,10 +95,10 @@ export function DatabaseTabs({
               <span
                 key={item.id}
                 className={[
-                  "inline-flex items-center gap-1 rounded-md border text-xs font-medium transition",
+                  "inline-flex items-center gap-0.5 rounded border text-xs font-medium transition",
                   active
-                    ? "border-zinc-900 bg-zinc-900 text-white"
-                    : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400",
+                    ? "border-[#f97316]/50 bg-[#f97316]/10 text-[#f97316]"
+                    : "border-[#2a2a28] text-white/45 hover:border-[#3a3a38] hover:text-white/70",
                 ].join(" ")}
               >
                 <button
@@ -112,9 +114,7 @@ export function DatabaseTabs({
                   aria-label={`Remove ${item.label}`}
                   className={[
                     "px-1.5 py-1 text-[11px] leading-none transition",
-                    active
-                      ? "text-white/70 hover:text-white"
-                      : "text-zinc-400 hover:text-zinc-700",
+                    active ? "text-[#f97316]/60 hover:text-[#f97316]" : "text-white/25 hover:text-white/60",
                   ].join(" ")}
                 >
                   ×
@@ -138,13 +138,13 @@ export function DatabaseTabs({
                 setDraftLabel("");
               }
             }}
-            placeholder="Label (e.g. 04/2026)"
-            className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none"
+            placeholder="Label (e.g. Budget 04/2026)"
+            className="flex-1 rounded border border-[#2a2a28] bg-[#161614] px-2 py-1 text-xs text-white placeholder:text-white/25 focus:border-[#f97316] focus:outline-none transition"
           />
           <button
             type="button"
             onClick={commitAdd}
-            className="rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white"
+            className="rounded bg-[#f97316] px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-[#ea6d0b]"
           >
             Save
           </button>

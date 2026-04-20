@@ -67,7 +67,7 @@ export default async function PreviewPage({
     : null;
 
   return (
-    <div className="grid h-dvh w-full grid-cols-[340px_1fr] overflow-hidden">
+    <div className="grid h-dvh w-full grid-cols-[320px_1fr] overflow-hidden">
       <PreviewForm
         initial={{ db, chart, group, value, agg, title, filters }}
         groupOptions={groupOptions}
@@ -76,15 +76,14 @@ export default async function PreviewPage({
         config={config}
         workspaceName={user.workspaceName}
       />
-      <main className="h-full min-w-0 overflow-hidden">
+      <main className="h-full min-w-0 overflow-hidden bg-white">
         {!db ? (
-          <Hint>Enter a Notion database ID on the left to begin.</Hint>
+          <Hint>Enter a Notion database ID in the sidebar to begin.</Hint>
         ) : fetchError ? (
           <Hint tone="error">
             Failed to load database: {fetchError}
             <br />
-            Make sure the integration is shared with this DB and{" "}
-            <code>NOTION_TOKEN</code> is set.
+            Make sure the integration is shared with this database.
           </Hint>
         ) : rows.length === 0 ? (
           <Hint>Database is empty.</Hint>
@@ -106,8 +105,8 @@ function Hint({
   return (
     <div className="flex h-full items-center justify-center p-8">
       <p
-        className={`max-w-md text-center text-sm ${
-          tone === "error" ? "text-red-600" : "text-zinc-500"
+        className={`max-w-sm text-center text-sm leading-relaxed ${
+          tone === "error" ? "text-red-500" : "text-zinc-400"
         }`}
       >
         {children}
