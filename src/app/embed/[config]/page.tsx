@@ -1,9 +1,32 @@
+import type { Metadata } from "next";
 import { ChartRenderer } from "@/components/ChartRenderer";
 import { applyFilters, groupAndAggregate } from "@/lib/aggregate";
 import { decodeConfig } from "@/lib/config";
 import { queryDatabase } from "@/lib/notion";
 
 export const revalidate = 60;
+
+function getBaseUrl(): string {
+  return (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/$/, "");
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ config: string }>;
+}): Promise<Metadata> {
+  const { config: token } = await params;
+  const base = getBaseUrl();
+  const embedUrl = `${base}/embed/${token}`;
+  const oembedUrl = `${base}/api/oembed?url=${encodeURIComponent(embedUrl)}&format=json`;
+  return {
+    alternates: {
+      types: {
+        "application/json+oembed": oembedUrl,
+      },
+    },
+  };
+}
 
 export default async function EmbedPage({
   params,
