@@ -25,12 +25,14 @@ export function PreviewForm({
   valueOptions,
   filterOptions,
   config,
+  workspaceName,
 }: {
   initial: State;
   groupOptions: string[];
   valueOptions: string[];
   filterOptions: Record<string, string[]>;
   config: EmbedConfig | null;
+  workspaceName: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -131,7 +133,24 @@ export function PreviewForm({
 
   return (
     <aside className="flex h-dvh flex-col gap-4 overflow-y-auto border-r border-zinc-200 bg-zinc-50 p-5 text-sm">
-      <h2 className="text-base font-semibold text-zinc-900">Preview</h2>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="text-base font-semibold text-zinc-900">Preview</h2>
+          {workspaceName ? (
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Connected to <span className="font-medium">{workspaceName}</span>
+            </p>
+          ) : null}
+        </div>
+        <form action="/api/auth/logout" method="post">
+          <button
+            type="submit"
+            className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
 
       <DatabaseTabs
         activeDb={state.db}

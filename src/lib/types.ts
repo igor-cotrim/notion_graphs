@@ -2,6 +2,7 @@ export type ChartType = "pie" | "bar" | "line";
 export type Aggregation = "sum" | "count" | "avg";
 
 export type EmbedConfig = {
+  userId: string;
   db: string;
   chart: ChartType;
   groupBy: string;

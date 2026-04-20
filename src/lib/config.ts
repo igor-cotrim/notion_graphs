@@ -47,7 +47,7 @@ export function decodeConfig(token: string, secret = getSecret()): EmbedConfig {
 
   const json = b64urlDecode(payload).toString("utf8");
   const parsed = JSON.parse(json) as EmbedConfig;
-  if (!parsed.db || !parsed.chart || !parsed.groupBy) {
+  if (!parsed.userId || !parsed.db || !parsed.chart || !parsed.groupBy) {
     throw new Error("Invalid config");
   }
   return parsed;

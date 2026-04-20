@@ -1,8 +1,6 @@
-import { Client } from "@notionhq/client";
 import { unstable_cache } from "next/cache";
+import { getNotionClientForUser } from "./notionClient";
 import type { NormalizedRow } from "./types";
-
-export const notion = new Client({ auth: process.env.NOTION_TOKEN });
 
 type AnyProp = Record<string, unknown> & { type: string };
 
@@ -61,7 +59,10 @@ function normalizePage(page: {
   return out;
 }
 
-async function resolveDataSourceId(dbOrDataSourceId: string): Promise<string> {
+async function resolveDataSourceId(
+  notion: Awaited<ReturnType<typeof getNotionClientForUser>>,
+  dbOrDataSourceId: string,
+): Promise<string> {
   try {
     const db = await notion.databases.retrieve({
       database_id: dbOrDataSourceId,
@@ -75,8 +76,12 @@ async function resolveDataSourceId(dbOrDataSourceId: string): Promise<string> {
   return dbOrDataSourceId;
 }
 
-async function fetchAllRows(dbOrDataSourceId: string): Promise<NormalizedRow[]> {
-  const dataSourceId = await resolveDataSourceId(dbOrDataSourceId);
+async function fetchAllRows(
+  userId: string,
+  dbOrDataSourceId: string,
+): Promise<NormalizedRow[]> {
+  const notion = await getNotionClientForUser(userId);
+  const dataSourceId = await resolveDataSourceId(notion, dbOrDataSourceId);
   const rows: NormalizedRow[] = [];
   let cursor: string | undefined = undefined;
   do {
@@ -97,9 +102,16 @@ async function fetchAllRows(dbOrDataSourceId: string): Promise<NormalizedRow[]> 
   return rows;
 }
 
-export function queryDatabase(dbId: string): Promise<NormalizedRow[]> {
-  return unstable_cache(() => fetchAllRows(dbId), ["notion-db", dbId], {
-    revalidate: 60,
-    tags: [`notion-db:${dbId}`],
-  })();
+export function queryDatabase(
+  userId: string,
+  dbId: string,
+): Promise<NormalizedRow[]> {
+  return unstable_cache(
+    () => fetchAllRows(userId, dbId),
+    ["notion-db", userId, dbId],
+    {
+      revalidate: 60,
+      tags: [`notion-db:${userId}:${dbId}`],
+    },
+  )();
 }

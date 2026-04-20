@@ -16,25 +16,39 @@ export default async function EmbedPage({
   try {
     config = decodeConfig(token);
   } catch {
-    return (
-      <div className="flex h-dvh w-full items-center justify-center bg-white text-sm text-gray-500">
-        Invalid embed token.
-      </div>
-    );
+    return <EmbedMessage>Invalid embed token.</EmbedMessage>;
   }
 
-  const rows = await queryDatabase(config.db);
-  const filtered = applyFilters(rows, config.filters);
-  const data = groupAndAggregate(
-    filtered,
-    config.groupBy,
-    config.valueProp ?? "Value",
-    config.agg ?? "sum",
-  );
+  let data;
+  try {
+    const rows = await queryDatabase(config.userId, config.db);
+    const filtered = applyFilters(rows, config.filters);
+    data = groupAndAggregate(
+      filtered,
+      config.groupBy,
+      config.valueProp ?? "Value",
+      config.agg ?? "sum",
+    );
+  } catch {
+    return (
+      <EmbedMessage>
+        This chart is no longer available — the owner disconnected their Notion
+        workspace.
+      </EmbedMessage>
+    );
+  }
 
   return (
     <div className="h-dvh w-full">
       <ChartRenderer type={config.chart} data={data} title={config.title} />
+    </div>
+  );
+}
+
+function EmbedMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-dvh w-full items-center justify-center bg-white p-6 text-center text-sm text-gray-500">
+      {children}
     </div>
   );
 }

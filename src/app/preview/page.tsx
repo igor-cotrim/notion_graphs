@@ -1,6 +1,7 @@
 import { ChartRenderer } from "@/components/ChartRenderer";
 import { PreviewForm } from "@/components/PreviewForm";
 import { applyFilters, groupAndAggregate } from "@/lib/aggregate";
+import { requireUser } from "@/lib/auth";
 import { queryDatabase } from "@/lib/notion";
 import {
   distinctValuesByProp,
@@ -25,6 +26,7 @@ export default async function PreviewPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const user = await requireUser();
   const sp = await searchParams;
   const db = firstParam(sp.db) ?? "";
   const chart = (firstParam(sp.chart) ?? "pie") as ChartType;
@@ -38,7 +40,7 @@ export default async function PreviewPage({
   let fetchError: string | null = null;
   if (db) {
     try {
-      rows = await queryDatabase(db);
+      rows = await queryDatabase(user.id, db);
     } catch (e) {
       fetchError = e instanceof Error ? e.message : String(e);
     }
@@ -53,6 +55,7 @@ export default async function PreviewPage({
 
   const config: EmbedConfig | null = db
     ? {
+        userId: user.id,
         db,
         chart,
         groupBy: group,
@@ -71,6 +74,7 @@ export default async function PreviewPage({
         valueOptions={valueOptions}
         filterOptions={filterOptions}
         config={config}
+        workspaceName={user.workspaceName}
       />
       <main className="h-full min-w-0 overflow-hidden">
         {!db ? (
