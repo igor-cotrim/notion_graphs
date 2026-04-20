@@ -14,12 +14,15 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "@nivo/bar": "^0.99.0",
+    "@nivo/core": "^0.99.0",
+    "@nivo/line": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
     "@notionhq/client": "^5.19.0",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "recharts": "^3.8.1"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@next/env": "^16.2.4",
