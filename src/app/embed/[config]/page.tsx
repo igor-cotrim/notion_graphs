@@ -39,7 +39,7 @@ export default async function EmbedPage({
   }
 
   return (
-    <div className="h-dvh w-full">
+    <div className="fixed inset-0 bg-white">
       <ChartRenderer type={config.chart} data={data} title={config.title} />
     </div>
   );
@@ -47,7 +47,7 @@ export default async function EmbedPage({
 
 function EmbedMessage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-dvh w-full items-center justify-center bg-white p-6 text-center text-sm text-gray-500">
+    <div className="fixed inset-0 flex items-center justify-center bg-white p-6 text-center text-sm text-gray-500">
       {children}
     </div>
   );
