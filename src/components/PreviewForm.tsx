@@ -174,6 +174,13 @@ export function PreviewForm({
           onBlur={() => pushState(state)}
           placeholder="2a046fb23fb5720b0905d3939b79f108"
         />
+        <p className="text-xs leading-relaxed text-zinc-400">
+          Open the database as a full page in Notion, then copy the URL. The ID
+          is the 32-character code at the end:{" "}
+          <code className="text-zinc-500">
+            notion.so/<strong>2a046fb23fb5720b0905d3939b79f108</strong>
+          </code>
+        </p>
         <button
           type="button"
           onClick={onRefresh}
@@ -182,7 +189,9 @@ export function PreviewForm({
         >
           <span
             aria-hidden
-            className={refreshing ? "inline-block animate-spin" : "inline-block"}
+            className={
+              refreshing ? "inline-block animate-spin" : "inline-block"
+            }
           >
             ↻
           </span>
