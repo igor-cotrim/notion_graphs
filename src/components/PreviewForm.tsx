@@ -42,6 +42,7 @@ export function PreviewForm({
     null,
   );
   const [mintErr, setMintErr] = useState<string | null>(null);
+  const [minting, setMinting] = useState(false);
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
 
   function pushState(next: State) {
@@ -88,11 +89,14 @@ export function PreviewForm({
     setMintErr(null);
     setMinted(null);
     if (!config) return;
+    setMinting(true);
     try {
       const res = await mintEmbedUrl(config);
       setMinted(res);
     } catch (e) {
       setMintErr(e instanceof Error ? e.message : "Failed to mint URL");
+    } finally {
+      setMinting(false);
     }
   }
 
@@ -132,20 +136,21 @@ export function PreviewForm({
   }
 
   return (
-    <aside className="flex h-dvh flex-col gap-4 overflow-y-auto border-r border-zinc-200 bg-zinc-50 p-5 text-sm">
+    <aside className="flex h-dvh flex-col gap-5 overflow-y-auto border-r border-[#1e1e1c] bg-[#0c0a09] p-5 text-sm">
+      {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">Preview</h2>
+          <h2 className="font-display text-sm font-semibold text-white">
+            Preview
+          </h2>
           {workspaceName ? (
-            <p className="mt-0.5 text-xs text-zinc-500">
-              Connected to <span className="font-medium">{workspaceName}</span>
-            </p>
+            <p className="mt-0.5 text-xs text-white/40">{workspaceName}</p>
           ) : null}
         </div>
         <form action="/api/auth/logout" method="post">
           <button
             type="submit"
-            className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"
+            className="rounded border border-[#2a2a28] px-2 py-1 text-xs font-medium text-white/40 transition hover:border-[#3a3a38] hover:text-white/70"
           >
             Sign out
           </button>
@@ -174,18 +179,18 @@ export function PreviewForm({
           onBlur={() => pushState(state)}
           placeholder="2a046fb23fb5720b0905d3939b79f108"
         />
-        <p className="text-xs leading-relaxed text-zinc-400">
-          Open the database as a full page in Notion, then copy the URL. The ID
-          is the 32-character code at the end:{" "}
-          <code className="text-zinc-500">
-            notion.so/<strong>2a046fb23fb5720b0905d3939b79f108</strong>
+        <p className="text-xs leading-relaxed text-white/25">
+          Open the database as a full page in Notion, copy the URL. The ID is
+          the 32-character code at the end:{" "}
+          <code className="font-mono text-white/40">
+            notion.so/<strong>2a046fb…</strong>
           </code>
         </p>
         <button
           type="button"
           onClick={onRefresh}
           disabled={!state.db || refreshing}
-          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400 disabled:opacity-50"
+          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded border border-[#2a2a28] px-2.5 py-1 text-xs font-medium text-white/40 transition hover:border-[#3a3a38] hover:text-white/70 disabled:opacity-40"
         >
           <span
             aria-hidden
@@ -203,7 +208,7 @@ export function PreviewForm({
         </button>
       </Field>
 
-      <Field label="Chart">
+      <Field label="Chart type">
         <div className="flex gap-1">
           {(["pie", "bar", "line"] as ChartType[]).map((t) => (
             <button
@@ -295,7 +300,7 @@ export function PreviewForm({
         <Field key={prop} label={`Filter — ${prop}`}>
           <div className="flex flex-wrap gap-1">
             {options.length === 0 ? (
-              <span className="text-xs text-zinc-400">no values</span>
+              <span className="text-xs text-white/25">no values</span>
             ) : (
               options.map((opt) => {
                 const active = state.filters[prop]?.includes(opt) ?? false;
@@ -315,23 +320,30 @@ export function PreviewForm({
         </Field>
       ))}
 
-      <div className="mt-auto space-y-2 border-t border-zinc-200 pt-4">
+      {/* Footer: generate embed */}
+      <div className="mt-auto space-y-3 border-t border-[#1e1e1c] pt-4">
         <button
           type="button"
           onClick={onMint}
-          disabled={!config || pending}
-          className="w-full rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+          disabled={!config || pending || minting}
+          className="font-display inline-flex w-full items-center justify-center gap-2 bg-[#f97316] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[#ea6d0b] disabled:opacity-40"
         >
-          Generate embed URL
+          {minting ? (
+            <>
+              <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              Generating…
+            </>
+          ) : (
+            "Generate embed URL"
+          )}
         </button>
-        {mintErr ? <p className="text-xs text-red-600">{mintErr}</p> : null}
+        {mintErr ? <p className="text-xs text-red-400">{mintErr}</p> : null}
         {minted ? (
           <div className="space-y-2 text-xs">
             <CopyBlock label="URL" value={minted.url} />
             <CopyBlock label="Iframe" value={minted.iframe} />
-            <p className="text-zinc-500">
+            <p className="text-white/25">
               Tip: paste the URL (not the iframe) into Notion → Create embed.
-              Notion can&rsquo;t load <code>localhost</code> — deploy first.
             </p>
           </div>
         ) : null}
@@ -348,8 +360,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+    <label className="flex flex-col gap-1.5">
+      <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/35">
         {label}
       </span>
       {children}
@@ -360,9 +372,11 @@ function Field({
 function CopyBlock({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <div className="rounded-md border border-zinc-200 bg-white p-2">
-      <div className="mb-1 flex items-center justify-between text-zinc-500">
-        <span className="font-medium uppercase tracking-wide">{label}</span>
+    <div className="rounded border border-[#2a2a28] bg-[#161614] p-2.5">
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/35">
+          {label}
+        </span>
         <button
           type="button"
           onClick={async () => {
@@ -370,12 +384,12 @@ function CopyBlock({ label, value }: { label: string; value: string }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
           }}
-          className="rounded bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold text-zinc-700 hover:bg-zinc-200"
+          className="rounded bg-[#2a2a28] px-2 py-0.5 text-[10px] font-semibold text-white/50 transition hover:bg-[#3a3a38] hover:text-white/80"
         >
-          {copied ? "copied" : "copy"}
+          {copied ? "copied ✓" : "copy"}
         </button>
       </div>
-      <code className="block break-all text-[11px] leading-relaxed text-zinc-700">
+      <code className="font-mono block break-all text-[11px] leading-relaxed text-white/60">
         {value}
       </code>
     </div>
@@ -383,13 +397,13 @@ function CopyBlock({ label, value }: { label: string; value: string }) {
 }
 
 const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none";
+  "w-full rounded border border-[#2a2a28] bg-[#161614] px-2.5 py-1.5 text-sm text-white placeholder:text-white/25 focus:border-[#f97316] focus:outline-none transition";
 
 function pillClass(active: boolean): string {
   return [
-    "rounded-md border px-2 py-1 text-xs font-medium transition",
+    "rounded border px-2.5 py-1 text-xs font-medium transition",
     active
-      ? "border-zinc-900 bg-zinc-900 text-white"
-      : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400",
+      ? "border-[#f97316] bg-[#f97316] text-white"
+      : "border-[#2a2a28] bg-transparent text-white/45 hover:border-[#3a3a38] hover:text-white/75",
   ].join(" ");
 }
