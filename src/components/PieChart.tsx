@@ -55,6 +55,8 @@ export function PieChart({ data }: { data: AggregatedPoint[] }) {
               arcLinkLabelsColor={{ from: "color" }}
               arcLinkLabelsDiagonalLength={12}
               arcLinkLabelsStraightLength={16}
+              arcLinkLabel={(d) => `${d.label}: ${fmtNumber(d.value)}`}
+              arcLabel={(d) => fmtPct(total > 0 ? d.value / total : 0)}
               arcLabelsSkipAngle={compact ? 8 : 13}
               arcLabelsTextColor="#ffffff"
               arcLabelsRadiusOffset={compact ? 0.6 : 0.7}
