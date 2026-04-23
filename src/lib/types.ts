@@ -28,3 +28,12 @@ export type AggregatedPoint = {
   label: string;
   value: number;
 };
+
+export type StoredDbState = {
+  chart: ChartType;
+  group: string;
+  value: string;
+  agg: Aggregation;
+  title: string;
+  filters: Record<string, string[]>;
+};

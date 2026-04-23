@@ -1,11 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { mintEmbedUrl, refreshDb } from "@/app/actions";
-import { type StoredDbState, updateDbState } from "@/lib/savedDbs";
-import type { Aggregation, ChartType, EmbedConfig } from "@/lib/types";
-import { DatabaseTabs } from "./DatabaseTabs";
+import {
+  createFolder,
+  createSavedDb,
+  deleteFolder,
+  deleteSavedDb,
+  moveSavedDb,
+  renameFolder,
+  renameSavedDb,
+  reorderSavedDbs,
+  updateSavedDbState,
+} from "@/app/actions/folders";
+import type { FolderTree } from "@/lib/savedDbsRepo";
+import type {
+  Aggregation,
+  ChartType,
+  EmbedConfig,
+  StoredDbState,
+} from "@/lib/types";
+import { FolderList } from "./folders/FolderList";
 
 type Filters = Record<string, string[]>;
 
@@ -19,8 +35,23 @@ type State = {
   filters: Filters;
 };
 
+const COLLAPSE_KEY = "notion-graphs:folder-ui";
+const LEGACY_KEY = "notion-graphs:dbs";
+
+function snapshotFromState(next: State): StoredDbState {
+  return {
+    chart: next.chart,
+    group: next.group,
+    value: next.value,
+    agg: next.agg,
+    title: next.title,
+    filters: next.filters,
+  };
+}
+
 export function PreviewForm({
   initial,
+  folders: initialFolders,
   groupOptions,
   valueOptions,
   filterOptions,
@@ -28,6 +59,7 @@ export function PreviewForm({
   workspaceName,
 }: {
   initial: State;
+  folders: FolderTree;
   groupOptions: string[];
   valueOptions: string[];
   filterOptions: Record<string, string[]>;
@@ -38,14 +70,95 @@ export function PreviewForm({
   const [pending, startTransition] = useTransition();
   const [refreshing, startRefresh] = useTransition();
   const [state, setState] = useState<State>(initial);
+  const [tree, setTree] = useState<FolderTree>(initialFolders);
+  const [activeSavedDbId, setActiveSavedDbId] = useState<string | null>(() => {
+    for (const f of initialFolders) {
+      for (const d of f.dbs) {
+        if (d.notionDbId === initial.db) return d.id;
+      }
+    }
+    return null;
+  });
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [minted, setMinted] = useState<{ url: string; iframe: string } | null>(
     null,
   );
   const [mintErr, setMintErr] = useState<string | null>(null);
   const [minting, setMinting] = useState(false);
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
+  const [treeError, setTreeError] = useState<string | null>(null);
 
-  function pushState(next: State) {
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSnapshotRef = useRef<{
+    id: string;
+    state: StoredDbState;
+  } | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem(LEGACY_KEY);
+      const raw = localStorage.getItem(COLLAPSE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed)) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setCollapsedIds(
+            new Set(parsed.filter((x): x is string => typeof x === "string")),
+          );
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const flushPendingSnapshot = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const pending = pendingSnapshotRef.current;
+    if (!pending) return;
+    pendingSnapshotRef.current = null;
+    void updateSavedDbState(pending.id, pending.state).catch(() => {
+      // fire-and-forget; stale state rewrites on next edit
+    });
+  }, []);
+
+  useEffect(() => {
+    function onVisibility() {
+      if (document.visibilityState === "hidden") flushPendingSnapshot();
+    }
+    function onBeforeUnload() {
+      flushPendingSnapshot();
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      flushPendingSnapshot();
+    };
+  }, [flushPendingSnapshot]);
+
+  function scheduleSnapshotSave(savedDbId: string, snapshot: StoredDbState) {
+    pendingSnapshotRef.current = { id: savedDbId, state: snapshot };
+    setTree((prev) =>
+      prev.map((f) => ({
+        ...f,
+        dbs: f.dbs.map((d) =>
+          d.id === savedDbId ? { ...d, state: snapshot } : d,
+        ),
+      })),
+    );
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null;
+      flushPendingSnapshot();
+    }, 600);
+  }
+
+  function pushState(next: State, opts?: { savedDbId?: string | null }) {
     const params = new URLSearchParams();
     if (next.db) params.set("db", next.db);
     params.set("chart", next.chart);
@@ -56,15 +169,10 @@ export function PreviewForm({
     for (const [k, vs] of Object.entries(next.filters)) {
       if (vs.length) params.append("filter", `${k}:${vs.join(",")}`);
     }
-    if (next.db) {
-      updateDbState(next.db, {
-        chart: next.chart,
-        group: next.group,
-        value: next.value,
-        agg: next.agg,
-        title: next.title,
-        filters: next.filters,
-      });
+    const targetSavedId =
+      opts && "savedDbId" in opts ? opts.savedDbId : activeSavedDbId;
+    if (next.db && targetSavedId) {
+      scheduleSnapshotSave(targetSavedId, snapshotFromState(next));
     }
     startTransition(() => router.push(`/preview?${params.toString()}`));
   }
@@ -109,17 +217,39 @@ export function PreviewForm({
     });
   }
 
-  function selectDb(id: string, savedState?: StoredDbState) {
-    if (savedState) {
-      const next: State = { db: id, ...savedState };
-      setState(next);
-      pushState(next);
-    } else {
-      patch({ db: id });
+  function onManualDbChange(rawDb: string) {
+    setState({ ...state, db: rawDb });
+    if (activeSavedDbId) {
+      const current = findSavedDb(tree, activeSavedDbId);
+      if (!current || current.notionDbId !== rawDb) {
+        flushPendingSnapshot();
+        setActiveSavedDbId(null);
+      }
     }
   }
 
+  function selectSavedDb(savedDbId: string) {
+    const row = findSavedDb(tree, savedDbId);
+    if (!row) return;
+    flushPendingSnapshot();
+    const base: StoredDbState = row.state ?? snapshotFromState(state);
+    const next: State = {
+      db: row.notionDbId,
+      chart: base.chart,
+      group: base.group,
+      value: base.value,
+      agg: base.agg,
+      title: base.title,
+      filters: base.filters,
+    };
+    setActiveSavedDbId(savedDbId);
+    setState(next);
+    pushState(next, { savedDbId });
+  }
+
   function startNew() {
+    flushPendingSnapshot();
+    setActiveSavedDbId(null);
     const blank: State = {
       db: "",
       chart: "pie",
@@ -133,6 +263,136 @@ export function PreviewForm({
     setMinted(null);
     setMintErr(null);
     startTransition(() => router.push("/preview"));
+  }
+
+  function runMutation(fn: () => Promise<void>) {
+    setTreeError(null);
+    startTransition(async () => {
+      try {
+        await fn();
+      } catch (e) {
+        console.error("[runMutation]", e);
+        setTreeError(e instanceof Error ? e.message : "Action failed");
+      }
+    });
+  }
+
+  function toggleCollapsed(folderId: string) {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      try {
+        localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...next]));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }
+
+  function onNewFolder(name: string) {
+    runMutation(async () => {
+      const { id } = await createFolder(name);
+      setTree((prev) => [...prev, { id, name, dbs: [] }]);
+    });
+  }
+
+  function onRenameFolderUi(id: string, name: string) {
+    setTree((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
+    runMutation(() => renameFolder(id, name));
+  }
+
+  function onDeleteFolderUi(id: string) {
+    const hadActive =
+      activeSavedDbId !== null &&
+      (tree
+        .find((f) => f.id === id)
+        ?.dbs.some((d) => d.id === activeSavedDbId) ??
+        false);
+    setTree((prev) => prev.filter((f) => f.id !== id));
+    if (hadActive) setActiveSavedDbId(null);
+    runMutation(() => deleteFolder(id));
+  }
+
+  function onSaveCurrent(folderId: string, label: string) {
+    if (!state.db) return;
+    const snapshot = snapshotFromState(state);
+    runMutation(async () => {
+      const { id } = await createSavedDb({
+        folderId,
+        notionDbId: state.db,
+        label,
+        state: snapshot,
+      });
+      setTree((prev) =>
+        prev.map((f) =>
+          f.id === folderId
+            ? {
+                ...f,
+                dbs: [
+                  ...f.dbs,
+                  { id, label, notionDbId: state.db, state: snapshot },
+                ],
+              }
+            : f,
+        ),
+      );
+      setActiveSavedDbId(id);
+    });
+  }
+
+  function onRenameDb(id: string, label: string) {
+    setTree((prev) =>
+      prev.map((f) => ({
+        ...f,
+        dbs: f.dbs.map((d) => (d.id === id ? { ...d, label } : d)),
+      })),
+    );
+    runMutation(() => renameSavedDb(id, label));
+  }
+
+  function onMoveDbUi(id: string, toFolderId: string) {
+    let moved: FolderTree[number]["dbs"][number] | null = null;
+    setTree((prev) => {
+      const stripped = prev.map((f) => {
+        const found = f.dbs.find((d) => d.id === id);
+        if (found) moved = found;
+        return { ...f, dbs: f.dbs.filter((d) => d.id !== id) };
+      });
+      if (!moved) return prev;
+      return stripped.map((f) =>
+        f.id === toFolderId ? { ...f, dbs: [...f.dbs, moved!] } : f,
+      );
+    });
+    runMutation(() => moveSavedDb(id, toFolderId));
+  }
+
+  function onReorderDbsUi(folderId: string, orderedIds: string[]) {
+    setTree((prev) =>
+      prev.map((f) =>
+        f.id !== folderId
+          ? f
+          : {
+              ...f,
+              dbs: orderedIds
+                .map((id) => f.dbs.find((d) => d.id === id))
+                .filter((d): d is NonNullable<typeof d> => d !== undefined),
+            },
+      ),
+    );
+    runMutation(() => reorderSavedDbs(folderId, orderedIds));
+  }
+
+  function onDeleteDbUi(id: string) {
+    if (activeSavedDbId === id) {
+      flushPendingSnapshot();
+      setActiveSavedDbId(null);
+    }
+    setTree((prev) =>
+      prev.map((f) => ({ ...f, dbs: f.dbs.filter((d) => d.id !== id) })),
+    );
+    runMutation(() => deleteSavedDb(id));
   }
 
   return (
@@ -157,25 +417,31 @@ export function PreviewForm({
         </form>
       </div>
 
-      <DatabaseTabs
-        activeDb={state.db}
-        currentState={{
-          chart: state.chart,
-          group: state.group,
-          value: state.value,
-          agg: state.agg,
-          title: state.title,
-          filters: state.filters,
-        }}
-        onSelect={selectDb}
-        onNew={startNew}
+      <FolderList
+        folders={tree}
+        activeSavedDbId={activeSavedDbId}
+        activeDbId={state.db}
+        collapsedIds={collapsedIds}
+        onToggleCollapsed={toggleCollapsed}
+        onNewFolder={onNewFolder}
+        onRenameFolder={onRenameFolderUi}
+        onDeleteFolder={onDeleteFolderUi}
+        onSaveCurrent={onSaveCurrent}
+        onSelectDb={selectSavedDb}
+        onRenameDb={onRenameDb}
+        onMoveDb={onMoveDbUi}
+        onDeleteDb={onDeleteDbUi}
+        onReorderDbs={onReorderDbsUi}
+        onNewBlank={startNew}
       />
+
+      {treeError ? <p className="text-xs text-red-400">{treeError}</p> : null}
 
       <Field label="Database ID">
         <input
           className={inputClass}
           value={state.db}
-          onChange={(e) => setState({ ...state, db: e.target.value })}
+          onChange={(e) => onManualDbChange(e.target.value)}
           onBlur={() => pushState(state)}
           placeholder="2a046fb23fb5720b0905d3939b79f108"
         />
@@ -350,6 +616,18 @@ export function PreviewForm({
       </div>
     </aside>
   );
+}
+
+function findSavedDb(
+  tree: FolderTree,
+  id: string,
+): FolderTree[number]["dbs"][number] | null {
+  for (const f of tree) {
+    for (const d of f.dbs) {
+      if (d.id === id) return d;
+    }
+  }
+  return null;
 }
 
 function Field({

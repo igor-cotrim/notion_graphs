@@ -10,6 +10,7 @@ import {
   listStringProps,
   parseFiltersFromSearchParams,
 } from "@/lib/preview";
+import { loadFolderTree } from "@/lib/savedDbsRepo";
 import type {
   Aggregation,
   ChartType,
@@ -38,13 +39,19 @@ export default async function PreviewPage({
 
   let rows: NormalizedRow[] = [];
   let fetchError: string | null = null;
-  if (db) {
-    try {
-      rows = await queryDatabase(user.id, db);
-    } catch (e) {
-      fetchError = e instanceof Error ? e.message : String(e);
-    }
-  }
+  const [folderTree, rowsResult] = await Promise.all([
+    loadFolderTree(user.id),
+    db
+      ? queryDatabase(user.id, db)
+          .then((r) => ({ ok: true as const, rows: r }))
+          .catch((e) => ({
+            ok: false as const,
+            error: e instanceof Error ? e.message : String(e),
+          }))
+      : Promise.resolve(null),
+  ]);
+  if (rowsResult && rowsResult.ok) rows = rowsResult.rows;
+  if (rowsResult && !rowsResult.ok) fetchError = rowsResult.error;
 
   const groupOptions = listStringProps(rows);
   const valueOptions = listNumericProps(rows);
@@ -70,6 +77,7 @@ export default async function PreviewPage({
     <div className="grid h-dvh w-full grid-cols-[320px_1fr] overflow-hidden">
       <PreviewForm
         initial={{ db, chart, group, value, agg, title, filters }}
+        folders={folderTree}
         groupOptions={groupOptions}
         valueOptions={valueOptions}
         filterOptions={filterOptions}
