@@ -93,7 +93,9 @@ async function fetchAllRows(
     for (const page of res.results) {
       if ("properties" in page) {
         rows.push(
-          normalizePage(page as { id: string; properties: Record<string, AnyProp> }),
+          normalizePage(
+            page as { id: string; properties: Record<string, AnyProp> },
+          ),
         );
       }
     }
@@ -110,7 +112,7 @@ export function queryDatabase(
     () => fetchAllRows(userId, dbId),
     ["notion-db", userId, dbId],
     {
-      revalidate: 60,
+      revalidate: 60 * 60 * 24, // 24 hours
       tags: [`notion-db:${userId}:${dbId}`],
     },
   )();

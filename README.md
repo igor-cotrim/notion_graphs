@@ -10,7 +10,7 @@ Embeddable charts generated from your Notion databases. Anyone connects their ow
 - Aggregate rows (group + sum/count/avg) and render pie / bar / line charts
 - Filters for `Type` / `Category` properties with live preview
 - Signed `/embed/<token>` URLs, iframe-friendly (`frame-ancestors *`)
-- ISR (`revalidate=60s`) + per-user cache isolation
+- ISR (`revalidate=60*60*24`) + per-user cache isolation
 
 > **Before external users can connect**, your public integration needs Notion's review approval. Until then only workspaces you own can authorize the app. You can build and test everything else locally in the meantime.
 
@@ -98,6 +98,7 @@ vercel
 ```
 
 In Vercel's dashboard:
+
 1. Add every variable from `.env.local.example`.
 2. Set `NEXT_PUBLIC_BASE_URL` to your production origin.
 3. Add `https://<prod-host>/api/auth/notion/callback` as a redirect URI on the Notion integration.
@@ -105,14 +106,14 @@ In Vercel's dashboard:
 
 ## Commands
 
-| | |
-|---|---|
-| `pnpm dev` | Next dev server on :3000 |
-| `pnpm build` / `pnpm start` | Production build + serve |
-| `pnpm lint` | ESLint |
-| `pnpm db:push` | Apply schema to `DATABASE_URL` (dev) |
-| `pnpm db:generate` / `pnpm db:migrate` | Migration-based flow (prod) |
-| `pnpm db:studio` | Drizzle Studio UI |
+|                                        |                                      |
+| -------------------------------------- | ------------------------------------ |
+| `pnpm dev`                             | Next dev server on :3000             |
+| `pnpm build` / `pnpm start`            | Production build + serve             |
+| `pnpm lint`                            | ESLint                               |
+| `pnpm db:push`                         | Apply schema to `DATABASE_URL` (dev) |
+| `pnpm db:generate` / `pnpm db:migrate` | Migration-based flow (prod)          |
+| `pnpm db:studio`                       | Drizzle Studio UI                    |
 
 ## How it works
 

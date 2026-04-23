@@ -36,7 +36,7 @@ Next.js App Router (React 19, Tailwind v4, `@notionhq/client` v5, Recharts v3, D
 
 1. **`/`** (`src/app/page.tsx`) — server component. Shows "Connect Notion" (→ `/api/auth/notion`) or "Open preview" + "Sign out" depending on session.
 2. **`/preview`** (`src/app/preview/page.tsx`) — server component, `force-dynamic`. Gated by `requireUser()`; redirects to `/` when unauthenticated. Renders `PreviewForm` sidebar + `ChartRenderer` using the authed user's Notion token.
-3. **`/embed/[config]`** (`src/app/embed/[config]/page.tsx`) — public embed target. Decodes the signed token, uses `config.userId` to look up the owner's Notion token, re-queries the DB, and renders the chart. `revalidate = 60` (ISR). Response sets `Content-Security-Policy: frame-ancestors *` via `next.config.ts`. If the owner is gone or their token is invalid, renders an "owner disconnected" message.
+3. **`/embed/[config]`** (`src/app/embed/[config]/page.tsx`) — public embed target. Decodes the signed token, uses `config.userId` to look up the owner's Notion token, re-queries the DB, and renders the chart. `revalidate = 60 * 60 * 24` (ISR). Response sets `Content-Security-Policy: frame-ancestors *` via `next.config.ts`. If the owner is gone or their token is invalid, renders an "owner disconnected" message.
 
 ### Auth & OAuth
 
@@ -80,4 +80,4 @@ Next.js App Router (React 19, Tailwind v4, `@notionhq/client` v5, Recharts v3, D
 - **Token encryption**: Notion tokens at rest are AES-256-GCM encrypted with `ENCRYPTION_KEY`. Losing that key bricks every stored token; rotating it requires a re-encrypt migration.
 - **`EMBED_SECRET` rotation** invalidates every previously minted embed URL. Don't rotate without a migration plan.
 - **Notion can't iframe `localhost`**. For local iteration open `/preview` directly; deploy before pasting embed URLs into Notion.
-- **`force-dynamic` on `/preview` vs `revalidate = 60` on `/embed`**: intentional — preview is interactive, embed is cached. Keep ISR on any new `embed/` route or the Notion rate limit will bite.
+- **`force-dynamic` on `/preview` vs `revalidate = 60 * 60 * 24` on `/embed`**: intentional — preview is interactive, embed is cached. Keep ISR on any new `embed/` route or the Notion rate limit will bite.

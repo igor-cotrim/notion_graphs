@@ -4,8 +4,6 @@ import { applyFilters, groupAndAggregate } from "@/lib/aggregate";
 import { decodeConfig } from "@/lib/config";
 import { queryDatabase } from "@/lib/notion";
 
-export const revalidate = 60;
-
 function getBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/$/, "");
 }
