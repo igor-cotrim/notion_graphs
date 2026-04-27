@@ -38,7 +38,7 @@ export function InlineTextInput({
         }}
         onBlur={commit}
         placeholder={placeholder}
-        className="flex-1 rounded border border-[#2a2a28] bg-[#161614] px-2 py-1 text-xs text-white placeholder:text-white/25 focus:border-[#f97316] focus:outline-none transition"
+        className="flex-1 rounded border border-[#2a2a28] bg-[#161614] px-2 py-1 text-xs text-white placeholder:text-white/55 focus:border-[#f97316] focus:outline-none transition"
       />
       <button
         type="button"

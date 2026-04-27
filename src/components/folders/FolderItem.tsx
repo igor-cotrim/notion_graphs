@@ -100,14 +100,14 @@ export function FolderItem({
             <button
               type="button"
               onClick={onToggleCollapsed}
-              className="flex flex-1 items-center gap-1.5 truncate text-left text-xs font-semibold text-white/55 transition hover:text-white/80"
+              className="flex flex-1 items-center gap-1.5 truncate text-left text-xs font-semibold text-white/75 transition hover:text-white/90"
               title={folder.name}
             >
-              <span aria-hidden className="text-[9px] text-white/35">
+              <span aria-hidden className="text-[9px] text-white/65">
                 {collapsed ? "▸" : "▾"}
               </span>
               <span className="truncate">{folder.name}</span>
-              <span className="text-[10px] font-normal text-white/30">
+              <span className="text-[10px] font-normal text-white/60">
                 {folder.dbs.length}
               </span>
             </button>
@@ -116,7 +116,7 @@ export function FolderItem({
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label={`More actions for folder ${folder.name}`}
-                className="px-1.5 py-0.5 text-[11px] leading-none text-white/25 transition hover:text-white/60"
+                className="px-1.5 py-0.5 text-[11px] leading-none text-white/55 transition hover:text-white/85"
               >
                 ⋯
               </button>
@@ -128,7 +128,7 @@ export function FolderItem({
                       setMenuOpen(false);
                       setRenaming(true);
                     }}
-                    className="block w-full px-2.5 py-1.5 text-left text-white/70 hover:bg-[#2a2a28] hover:text-white"
+                    className="block w-full px-2.5 py-1.5 text-left text-white/85 hover:bg-[#2a2a28] hover:text-white"
                   >
                     Rename folder
                   </button>
@@ -169,7 +169,7 @@ export function FolderItem({
           <button
             type="button"
             onClick={() => setConfirmingDelete(false)}
-            className="text-[11px] text-white/40 transition hover:text-white/70"
+            className="text-[11px] text-white/70 transition hover:text-white/85"
           >
             Cancel
           </button>
@@ -215,7 +215,7 @@ export function FolderItem({
             <button
               type="button"
               onClick={() => setSavingNew(true)}
-              className="self-start text-[11px] font-medium text-white/35 transition hover:text-white/70"
+              className="self-start text-[11px] font-medium text-white/65 transition hover:text-white/85"
             >
               + Save current DB
             </button>

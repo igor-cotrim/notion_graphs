@@ -396,7 +396,7 @@ export function PreviewForm({
   }
 
   return (
-    <aside className="flex h-dvh flex-col gap-5 overflow-y-auto border-r border-[#1e1e1c] bg-[#0c0a09] p-5 text-sm">
+    <aside className="flex h-full flex-col gap-5 overflow-y-auto border-r border-[#1e1e1c] bg-[#0c0a09] p-5 text-sm">
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -404,13 +404,13 @@ export function PreviewForm({
             Preview
           </h2>
           {workspaceName ? (
-            <p className="mt-0.5 text-xs text-white/40">{workspaceName}</p>
+            <p className="mt-0.5 text-xs text-white/70">{workspaceName}</p>
           ) : null}
         </div>
         <form action="/api/auth/logout" method="post">
           <button
             type="submit"
-            className="rounded border border-[#2a2a28] px-2 py-1 text-xs font-medium text-white/40 transition hover:border-[#3a3a38] hover:text-white/70"
+            className="rounded border border-[#2a2a28] px-2 py-1 text-xs font-medium text-white/70 transition hover:border-[#3a3a38] hover:text-white/85"
           >
             Sign out
           </button>
@@ -445,10 +445,10 @@ export function PreviewForm({
           onBlur={() => pushState(state)}
           placeholder="2a046fb23fb5720b0905d3939b79f108"
         />
-        <p className="text-xs leading-relaxed text-white/25">
+        <p className="text-xs leading-relaxed text-white/55">
           Open the database as a full page in Notion, copy the URL. The ID is
           the 32-character code at the end:{" "}
-          <code className="font-mono text-white/40">
+          <code className="font-mono text-white/70">
             notion.so/<strong>2a046fb…</strong>
           </code>
         </p>
@@ -456,7 +456,7 @@ export function PreviewForm({
           type="button"
           onClick={onRefresh}
           disabled={!state.db || refreshing}
-          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded border border-[#2a2a28] px-2.5 py-1 text-xs font-medium text-white/40 transition hover:border-[#3a3a38] hover:text-white/70 disabled:opacity-40"
+          className="mt-1 inline-flex w-fit items-center gap-1.5 rounded border border-[#2a2a28] px-2.5 py-1 text-xs font-medium text-white/70 transition hover:border-[#3a3a38] hover:text-white/85 disabled:opacity-40"
         >
           <span
             aria-hidden
@@ -566,7 +566,7 @@ export function PreviewForm({
         <Field key={prop} label={`Filter — ${prop}`}>
           <div className="flex flex-wrap gap-1">
             {options.length === 0 ? (
-              <span className="text-xs text-white/25">no values</span>
+              <span className="text-xs text-white/55">no values</span>
             ) : (
               options.map((opt) => {
                 const active = state.filters[prop]?.includes(opt) ?? false;
@@ -608,7 +608,7 @@ export function PreviewForm({
           <div className="space-y-2 text-xs">
             <CopyBlock label="URL" value={minted.url} />
             <CopyBlock label="Iframe" value={minted.iframe} />
-            <p className="text-white/25">
+            <p className="text-white/55">
               Tip: paste the URL (not the iframe) into Notion → Create embed.
             </p>
           </div>
@@ -639,7 +639,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/35">
+      <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/65">
         {label}
       </span>
       {children}
@@ -652,7 +652,7 @@ function CopyBlock({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded border border-[#2a2a28] bg-[#161614] p-2.5">
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/35">
+        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/65">
           {label}
         </span>
         <button
@@ -662,12 +662,12 @@ function CopyBlock({ label, value }: { label: string; value: string }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
           }}
-          className="rounded bg-[#2a2a28] px-2 py-0.5 text-[10px] font-semibold text-white/50 transition hover:bg-[#3a3a38] hover:text-white/80"
+          className="rounded bg-[#2a2a28] px-2 py-0.5 text-[10px] font-semibold text-white/75 transition hover:bg-[#3a3a38] hover:text-white/90"
         >
           {copied ? "copied ✓" : "copy"}
         </button>
       </div>
-      <code className="font-mono block break-all text-[11px] leading-relaxed text-white/60">
+      <code className="font-mono block break-all text-[11px] leading-relaxed text-white/80">
         {value}
       </code>
     </div>
@@ -675,13 +675,13 @@ function CopyBlock({ label, value }: { label: string; value: string }) {
 }
 
 const inputClass =
-  "w-full rounded border border-[#2a2a28] bg-[#161614] px-2.5 py-1.5 text-sm text-white placeholder:text-white/25 focus:border-[#f97316] focus:outline-none transition";
+  "w-full rounded border border-[#2a2a28] bg-[#161614] px-2.5 py-1.5 text-sm text-white placeholder:text-white/55 focus:border-[#f97316] focus:outline-none transition";
 
 function pillClass(active: boolean): string {
   return [
     "rounded border px-2.5 py-1 text-xs font-medium transition",
     active
       ? "border-[#f97316] bg-[#f97316] text-white"
-      : "border-[#2a2a28] bg-transparent text-white/45 hover:border-[#3a3a38] hover:text-white/75",
+      : "border-[#2a2a28] bg-transparent text-white/70 hover:border-[#3a3a38] hover:text-white/90",
   ].join(" ");
 }

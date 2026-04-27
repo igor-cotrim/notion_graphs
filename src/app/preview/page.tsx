@@ -1,5 +1,6 @@
 import { ChartRenderer } from "@/components/ChartRenderer";
 import { PreviewForm } from "@/components/PreviewForm";
+import { PreviewLayoutShell } from "@/components/PreviewLayoutShell";
 import { applyFilters, groupAndAggregate } from "@/lib/aggregate";
 import { requireUser } from "@/lib/auth";
 import { queryDatabase } from "@/lib/notion";
@@ -74,32 +75,33 @@ export default async function PreviewPage({
     : null;
 
   return (
-    <div className="grid h-dvh w-full grid-cols-[320px_1fr] overflow-hidden">
-      <PreviewForm
-        initial={{ db, chart, group, value, agg, title, filters }}
-        folders={folderTree}
-        groupOptions={groupOptions}
-        valueOptions={valueOptions}
-        filterOptions={filterOptions}
-        config={config}
-        workspaceName={user.workspaceName}
-      />
-      <main className="h-full min-w-0 overflow-hidden bg-white">
-        {!db ? (
-          <Hint>Enter a Notion database ID in the sidebar to begin.</Hint>
-        ) : fetchError ? (
-          <Hint tone="error">
-            Failed to load database: {fetchError}
-            <br />
-            Make sure the integration is shared with this database.
-          </Hint>
-        ) : rows.length === 0 ? (
-          <Hint>Database is empty.</Hint>
-        ) : (
-          <ChartRenderer type={chart} data={data} title={title || undefined} />
-        )}
-      </main>
-    </div>
+    <PreviewLayoutShell
+      sidebar={
+        <PreviewForm
+          initial={{ db, chart, group, value, agg, title, filters }}
+          folders={folderTree}
+          groupOptions={groupOptions}
+          valueOptions={valueOptions}
+          filterOptions={filterOptions}
+          config={config}
+          workspaceName={user.workspaceName}
+        />
+      }
+    >
+      {!db ? (
+        <Hint>Enter a Notion database ID in the sidebar to begin.</Hint>
+      ) : fetchError ? (
+        <Hint tone="error">
+          Failed to load database: {fetchError}
+          <br />
+          Make sure the integration is shared with this database.
+        </Hint>
+      ) : rows.length === 0 ? (
+        <Hint>Database is empty.</Hint>
+      ) : (
+        <ChartRenderer type={chart} data={data} title={title || undefined} />
+      )}
+    </PreviewLayoutShell>
   );
 }
 

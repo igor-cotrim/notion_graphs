@@ -69,7 +69,7 @@ export function SavedDbTab({
         "group relative flex items-center rounded border text-xs font-medium transition",
         active
           ? "border-[#f97316]/50 bg-[#f97316]/10 text-[#f97316]"
-          : "border-[#2a2a28] text-white/60 hover:border-[#3a3a38] hover:text-white/85",
+          : "border-[#2a2a28] text-white/80 hover:border-[#3a3a38] hover:text-white/95",
         isDragging ? "opacity-50" : "",
       ].join(" ")}
     >
@@ -80,7 +80,7 @@ export function SavedDbTab({
         tabIndex={-1}
         aria-label="Drag to reorder"
         suppressHydrationWarning
-        className="cursor-grab px-1.5 py-1 text-[11px] leading-none text-white/20 hover:text-white/50 active:cursor-grabbing"
+        className="cursor-grab px-1.5 py-1 text-[11px] leading-none text-white/55 hover:text-white/80 active:cursor-grabbing"
       >
         ⠿
       </button>
@@ -101,7 +101,7 @@ export function SavedDbTab({
             "px-1.5 py-1 text-[11px] leading-none transition",
             active
               ? "text-[#f97316]/60 hover:text-[#f97316]"
-              : "text-white/25 hover:text-white/60",
+              : "text-white/55 hover:text-white/85",
           ].join(" ")}
         >
           ⋯
@@ -114,13 +114,13 @@ export function SavedDbTab({
                 setMenuOpen(false);
                 setRenaming(true);
               }}
-              className="block w-full px-2.5 py-1.5 text-left text-white/70 hover:bg-[#2a2a28] hover:text-white"
+              className="block w-full px-2.5 py-1.5 text-left text-white/85 hover:bg-[#2a2a28] hover:text-white"
             >
               Rename
             </button>
             {moveTargets.length > 0 ? (
               <div className="border-t border-[#2a2a28] py-1">
-                <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
+                <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/65">
                   Move to
                 </p>
                 {moveTargets.map((f) => (
@@ -131,7 +131,7 @@ export function SavedDbTab({
                       setMenuOpen(false);
                       onMove(f.id);
                     }}
-                    className="block w-full truncate px-2.5 py-1 text-left text-white/60 hover:bg-[#2a2a28] hover:text-white/85"
+                    className="block w-full truncate px-2.5 py-1 text-left text-white/80 hover:bg-[#2a2a28] hover:text-white/95"
                   >
                     {f.name}
                   </button>

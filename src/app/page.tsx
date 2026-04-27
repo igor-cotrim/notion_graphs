@@ -9,14 +9,14 @@ export default async function Home() {
       <div className="mx-auto flex min-h-dvh max-w-5xl flex-col p-8 md:p-12">
         {/* Top bar */}
         <header className="flex items-center justify-between">
-          <span className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-white/30">
+          <span className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
             notion-graphs
           </span>
           {user && (
             <form action="/api/auth/logout" method="post">
               <button
                 type="submit"
-                className="text-xs font-medium text-white/30 transition hover:text-white/60"
+                className="text-xs font-medium text-white/60 transition hover:text-white/85"
               >
                 Sign out
               </button>
@@ -31,7 +31,7 @@ export default async function Home() {
             <br />
             <span className="text-[#f97316]">charted.</span>
           </h1>
-          <p className="max-w-sm text-base leading-relaxed text-white/40">
+          <p className="max-w-sm text-base leading-relaxed text-white/70">
             Turn any Notion database into an embeddable chart. Connect your
             workspace, shape the data, and paste a signed embed URL back into
             Notion.
@@ -44,7 +44,7 @@ export default async function Home() {
               >
                 Open preview →
               </Link>
-              <span className="text-sm text-white/30">
+              <span className="text-sm text-white/60">
                 {user.workspaceName
                   ? `${user.workspaceName} connected`
                   : "Workspace connected"}
@@ -94,7 +94,7 @@ export default async function Home() {
                 <span className="font-display text-sm font-semibold text-white/80">
                   {title}
                 </span>
-                <span className="text-xs leading-relaxed text-white/30">
+                <span className="text-xs leading-relaxed text-white/60">
                   {desc}
                 </span>
               </div>

@@ -48,14 +48,14 @@ export function FolderList({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/35">
+        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/65">
           Databases
         </span>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onNewBlank}
-            className="text-xs font-medium text-white/40 transition hover:text-white/70"
+            className="text-xs font-medium text-white/70 transition hover:text-white/85"
           >
             + New
           </button>
@@ -63,7 +63,7 @@ export function FolderList({
             <button
               type="button"
               onClick={() => setAddingFolder(true)}
-              className="text-xs font-medium text-white/40 transition hover:text-white/70"
+              className="text-xs font-medium text-white/70 transition hover:text-white/85"
             >
               + Folder
             </button>
@@ -83,7 +83,7 @@ export function FolderList({
       ) : null}
 
       {folders.length === 0 && !addingFolder ? (
-        <p className="text-xs leading-relaxed text-white/25">
+        <p className="text-xs leading-relaxed text-white/55">
           Create a folder to start pinning Notion databases.
         </p>
       ) : null}
