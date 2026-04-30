@@ -52,3 +52,31 @@ export function decodeConfig(token: string, secret = getSecret()): EmbedConfig {
   }
   return parsed;
 }
+
+export type EmbedRef = { v: 2; userId: string; savedDbId: string };
+
+export function encodeEmbedRef(ref: EmbedRef, secret = getSecret()): string {
+  const payload = b64urlEncode(Buffer.from(JSON.stringify(ref), "utf8"));
+  return `${payload}.${sign(payload, secret)}`;
+}
+
+export function decodeEmbedRef(token: string, secret = getSecret()): EmbedRef {
+  const dot = token.lastIndexOf(".");
+  if (dot < 0) throw new Error("Malformed token");
+  const payload = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+
+  const expected = sign(payload, secret);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    throw new Error("Invalid signature");
+  }
+
+  const json = b64urlDecode(payload).toString("utf8");
+  const parsed = JSON.parse(json) as Partial<EmbedRef>;
+  if (parsed.v !== 2 || !parsed.userId || !parsed.savedDbId) {
+    throw new Error("Not an embed ref");
+  }
+  return { v: 2, userId: parsed.userId, savedDbId: parsed.savedDbId };
+}

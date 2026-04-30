@@ -10,6 +10,7 @@ import {
   insertSavedDb,
   moveSavedDbToFolder,
   reorderDbs,
+  savedDbTag,
   savedDbsTag,
   updateFolderName,
   updateSavedDbLabel,
@@ -82,6 +83,7 @@ export async function deleteSavedDb(id: string): Promise<void> {
   const user = await requireUser();
   await deleteSavedDbById(user.id, id);
   updateTag(savedDbsTag(user.id));
+  updateTag(savedDbTag(id));
 }
 
 function pgCode(e: unknown): string | undefined {
@@ -116,6 +118,7 @@ export async function updateSavedDbState(
   const user = await requireUser();
   await updateSavedDbStateById(user.id, id, state);
   updateTag(savedDbsTag(user.id));
+  updateTag(savedDbTag(id));
 }
 
 export async function reorderSavedDbs(

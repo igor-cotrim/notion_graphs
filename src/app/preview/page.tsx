@@ -12,12 +12,7 @@ import {
   parseFiltersFromSearchParams,
 } from "@/lib/preview";
 import { loadFolderTree } from "@/lib/savedDbsRepo";
-import type {
-  Aggregation,
-  ChartType,
-  EmbedConfig,
-  NormalizedRow,
-} from "@/lib/types";
+import type { Aggregation, ChartType, NormalizedRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -61,19 +56,6 @@ export default async function PreviewPage({
   const filtered = applyFilters(rows, filters);
   const data = groupAndAggregate(filtered, group, value, agg);
 
-  const config: EmbedConfig | null = db
-    ? {
-        userId: user.id,
-        db,
-        chart,
-        groupBy: group,
-        valueProp: value,
-        agg,
-        filters,
-        title: title || undefined,
-      }
-    : null;
-
   return (
     <PreviewLayoutShell
       sidebar={
@@ -83,7 +65,6 @@ export default async function PreviewPage({
           groupOptions={groupOptions}
           valueOptions={valueOptions}
           filterOptions={filterOptions}
-          config={config}
           workspaceName={user.workspaceName}
         />
       }

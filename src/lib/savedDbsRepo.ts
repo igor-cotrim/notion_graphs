@@ -23,6 +23,50 @@ export function savedDbsTag(userId: string): string {
   return `saved-dbs:${userId}`;
 }
 
+export function savedDbTag(savedDbId: string): string {
+  return `saved-db:${savedDbId}`;
+}
+
+export type SavedDbForEmbed = {
+  userId: string;
+  notionDbId: string;
+  label: string;
+  state: StoredDbState | null;
+};
+
+async function fetchSavedDbForEmbed(
+  savedDbId: string,
+): Promise<SavedDbForEmbed | null> {
+  const rows = await db
+    .select({
+      userId: savedDbs.userId,
+      notionDbId: savedDbs.notionDbId,
+      label: savedDbs.label,
+      state: savedDbs.state,
+    })
+    .from(savedDbs)
+    .where(eq(savedDbs.id, savedDbId))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    userId: row.userId,
+    notionDbId: row.notionDbId,
+    label: row.label,
+    state: row.state ?? null,
+  };
+}
+
+export function loadSavedDbForEmbed(
+  savedDbId: string,
+): Promise<SavedDbForEmbed | null> {
+  return unstable_cache(
+    () => fetchSavedDbForEmbed(savedDbId),
+    ["saved-db-embed", savedDbId],
+    { tags: [savedDbTag(savedDbId)] },
+  )();
+}
+
 async function fetchFolderTree(userId: string): Promise<FolderTree> {
   const [folderRows, dbRows] = await Promise.all([
     db

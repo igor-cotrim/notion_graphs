@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { ChartRenderer } from "@/components/ChartRenderer";
 import { applyFilters, groupAndAggregate } from "@/lib/aggregate";
-import { decodeConfig } from "@/lib/config";
+import { decodeConfig, decodeEmbedRef } from "@/lib/config";
 import { queryDatabase } from "@/lib/notion";
+import { loadSavedDbForEmbed } from "@/lib/savedDbsRepo";
+import type { EmbedConfig } from "@/lib/types";
 
 function getBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/$/, "");
@@ -33,12 +35,37 @@ export default async function EmbedPage({
 }) {
   const { config: token } = await params;
 
-  let config;
+  let config: EmbedConfig | null = null;
+  let unavailable: string | null = null;
   try {
-    config = decodeConfig(token);
+    const ref = decodeEmbedRef(token);
+    const row = await loadSavedDbForEmbed(ref.savedDbId);
+    if (!row || row.userId !== ref.userId) {
+      unavailable = "This chart is no longer available.";
+    } else if (!row.state) {
+      unavailable = "This chart has no saved state yet.";
+    } else {
+      config = {
+        userId: row.userId,
+        db: row.notionDbId,
+        chart: row.state.chart,
+        groupBy: row.state.group,
+        valueProp: row.state.value,
+        agg: row.state.agg,
+        title: row.state.title,
+        filters: row.state.filters,
+      };
+    }
   } catch {
-    return <EmbedMessage>Invalid embed token.</EmbedMessage>;
+    try {
+      config = decodeConfig(token);
+    } catch {
+      unavailable = "Invalid embed token.";
+    }
   }
+
+  if (unavailable) return <EmbedMessage>{unavailable}</EmbedMessage>;
+  if (!config) return <EmbedMessage>Invalid embed token.</EmbedMessage>;
 
   let data;
   try {

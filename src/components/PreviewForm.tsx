@@ -15,12 +15,7 @@ import {
   updateSavedDbState,
 } from "@/app/actions/folders";
 import type { FolderTree } from "@/lib/savedDbsRepo";
-import type {
-  Aggregation,
-  ChartType,
-  EmbedConfig,
-  StoredDbState,
-} from "@/lib/types";
+import type { Aggregation, ChartType, StoredDbState } from "@/lib/types";
 import { FolderList } from "./folders/FolderList";
 
 type Filters = Record<string, string[]>;
@@ -55,7 +50,6 @@ export function PreviewForm({
   groupOptions,
   valueOptions,
   filterOptions,
-  config,
   workspaceName,
 }: {
   initial: State;
@@ -63,7 +57,6 @@ export function PreviewForm({
   groupOptions: string[];
   valueOptions: string[];
   filterOptions: Record<string, string[]>;
-  config: EmbedConfig | null;
   workspaceName: string | null;
 }) {
   const router = useRouter();
@@ -196,10 +189,11 @@ export function PreviewForm({
   async function onMint() {
     setMintErr(null);
     setMinted(null);
-    if (!config) return;
+    if (!activeSavedDbId) return;
+    flushPendingSnapshot();
     setMinting(true);
     try {
-      const res = await mintEmbedUrl(config);
+      const res = await mintEmbedUrl(activeSavedDbId);
       setMinted(res);
     } catch (e) {
       setMintErr(e instanceof Error ? e.message : "Failed to mint URL");
@@ -591,7 +585,7 @@ export function PreviewForm({
         <button
           type="button"
           onClick={onMint}
-          disabled={!config || pending || minting}
+          disabled={!activeSavedDbId || pending || minting}
           className="font-display inline-flex w-full items-center justify-center gap-2 bg-[#f97316] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[#ea6d0b] disabled:opacity-40"
         >
           {minting ? (
@@ -603,6 +597,11 @@ export function PreviewForm({
             "Generate embed URL"
           )}
         </button>
+        {!activeSavedDbId && state.db ? (
+          <p className="text-xs text-white/55">
+            Save this database to a folder to generate a stable embed URL.
+          </p>
+        ) : null}
         {mintErr ? <p className="text-xs text-red-400">{mintErr}</p> : null}
         {minted ? (
           <div className="space-y-2 text-xs">
