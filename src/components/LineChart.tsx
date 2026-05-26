@@ -4,8 +4,8 @@ import { ResponsiveLine } from "@nivo/line";
 import type { AggregatedPoint } from "@/lib/types";
 import { fmtNumber, fmtPct, totalOf } from "@/lib/format";
 import { useContainerWidth } from "@/hooks/useContainerWidth";
-import { PALETTE } from "./palette";
-import { nivoTheme } from "./nivoTheme";
+import { PALETTE } from "@/lib/palette";
+import { nivoTheme } from "@/lib/nivoTheme";
 
 const tooltipStyle = {
   background: "#fff",
@@ -40,7 +40,12 @@ export function LineChart({ data }: { data: AggregatedPoint[] }) {
         <ResponsiveLine
           data={lineData}
           theme={nivoTheme}
-          margin={{ top: 16, right: 16, bottom: bottomMargin, left: leftMargin }}
+          margin={{
+            top: 16,
+            right: 16,
+            bottom: bottomMargin,
+            left: leftMargin,
+          }}
           xScale={{ type: "point" }}
           yScale={{ type: "linear", min: "auto", max: "auto", stacked: false }}
           curve="catmullRom"
@@ -98,8 +103,8 @@ export function LineChart({ data }: { data: AggregatedPoint[] }) {
                   {String(point.data.x)}
                 </div>
                 <div style={{ color: "#6b7280" }}>
-                  {fmtNumber(value)}{" "}
-                  <span style={{ color: "#d4d4d8" }}>·</span> {fmtPct(pct)}
+                  {fmtNumber(value)} <span style={{ color: "#d4d4d8" }}>·</span>{" "}
+                  {fmtPct(pct)}
                 </div>
               </div>
             );

@@ -4,8 +4,8 @@ import { ResponsivePie } from "@nivo/pie";
 import type { AggregatedPoint } from "@/lib/types";
 import { fmtNumber, fmtPct, totalOf } from "@/lib/format";
 import { useContainerWidth } from "@/hooks/useContainerWidth";
-import { PALETTE } from "./palette";
-import { nivoTheme } from "./nivoTheme";
+import { PALETTE } from "@/lib/palette";
+import { nivoTheme } from "@/lib/nivoTheme";
 
 type NivoDatum = {
   id: string;
@@ -33,7 +33,12 @@ export function PieChart({ data }: { data: AggregatedPoint[] }) {
   return (
     <div
       ref={ref}
-      style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
       {width > 0 && (
         <>

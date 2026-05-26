@@ -1,6 +1,7 @@
 "use client";
 
 import type { AggregatedPoint, ChartType } from "@/lib/types";
+import { useLocale } from "@/hooks/useLocale";
 import { BarChart } from "./BarChart";
 import { LineChart } from "./LineChart";
 import { PieChart } from "./PieChart";
@@ -14,6 +15,7 @@ export function ChartRenderer({
   data: AggregatedPoint[];
   title?: string;
 }) {
+  const { t } = useLocale();
   return (
     <div className="flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden bg-white p-3 sm:p-4">
       {title ? (
@@ -24,7 +26,7 @@ export function ChartRenderer({
       <div className="min-h-0 min-w-0 flex-1">
         {data.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm text-zinc-400">
-            No data.
+            {t("chart.noData")}
           </div>
         ) : type === "pie" ? (
           <PieChart data={data} />

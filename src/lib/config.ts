@@ -27,7 +27,10 @@ function sign(payload: string, secret: string): string {
   return b64urlEncode(mac.subarray(0, SIG_BYTES));
 }
 
-export function encodeConfig(config: EmbedConfig, secret = getSecret()): string {
+export function encodeConfig(
+  config: EmbedConfig,
+  secret = getSecret(),
+): string {
   const payload = b64urlEncode(Buffer.from(JSON.stringify(config), "utf8"));
   return `${payload}.${sign(payload, secret)}`;
 }

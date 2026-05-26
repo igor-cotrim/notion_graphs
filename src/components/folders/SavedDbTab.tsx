@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { FolderNode } from "@/lib/savedDbsRepo";
+import { useLocale } from "@/hooks/useLocale";
 import { InlineTextInput } from "./InlineTextInput";
 
 type SavedDb = FolderNode["dbs"][number];
@@ -25,6 +26,7 @@ export function SavedDbTab({
   onMove: (toFolderId: string) => void;
   onDelete: () => void;
 }) {
+  const { t } = useLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -51,7 +53,7 @@ export function SavedDbTab({
     return (
       <InlineTextInput
         initial={db.label}
-        placeholder="Label"
+        placeholder={t("folders.saveLabelPlaceholder")}
         onCommit={(label) => {
           onRename(label);
           setRenaming(false);
@@ -78,7 +80,7 @@ export function SavedDbTab({
         {...attributes}
         {...listeners}
         tabIndex={-1}
-        aria-label="Drag to reorder"
+        aria-label={t("folders.dragToReorder")}
         suppressHydrationWarning
         className="cursor-grab px-1.5 py-1 text-[11px] leading-none text-white/55 hover:text-white/80 active:cursor-grabbing"
       >
@@ -116,12 +118,12 @@ export function SavedDbTab({
               }}
               className="block w-full px-2.5 py-1.5 text-left text-white/85 hover:bg-[#2a2a28] hover:text-white"
             >
-              Rename
+              {t("folders.rename")}
             </button>
             {moveTargets.length > 0 ? (
               <div className="border-t border-[#2a2a28] py-1">
                 <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/65">
-                  Move to
+                  {t("folders.moveTo")}
                 </p>
                 {moveTargets.map((f) => (
                   <button
@@ -146,7 +148,7 @@ export function SavedDbTab({
               }}
               className="block w-full border-t border-[#2a2a28] px-2.5 py-1.5 text-left text-red-400 hover:bg-[#2a2a28]"
             >
-              Delete
+              {t("folders.delete")}
             </button>
           </div>
         ) : null}

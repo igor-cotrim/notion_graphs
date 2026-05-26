@@ -22,3 +22,21 @@ body {
   background: #f97316;
   color: #ffffff;
 }
+
+.scrollbar-orange {
+  scrollbar-color: #f97316 transparent;
+  scrollbar-width: thin;
+}
+
+.scrollbar-orange::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-orange::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-orange::-webkit-scrollbar-thumb {
+  background-color: #f97316;
+  border-radius: 2px;
+}

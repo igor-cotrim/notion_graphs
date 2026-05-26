@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FolderTree } from "@/lib/savedDbsRepo";
+import { useLocale } from "@/hooks/useLocale";
 import { FolderItem } from "./FolderItem";
 import { InlineTextInput } from "./InlineTextInput";
 
@@ -38,6 +39,7 @@ export function FolderList({
   onReorderDbs: (folderId: string, orderedIds: string[]) => void;
   onNewBlank: () => void;
 }) {
+  const { t } = useLocale();
   const [addingFolder, setAddingFolder] = useState(false);
   const allFolders = folders.map((f) => ({
     id: f.id,
@@ -49,7 +51,7 @@ export function FolderList({
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between gap-2">
         <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-white/65">
-          Databases
+          {t("folders.databases")}
         </span>
         <div className="flex items-center gap-3">
           <button
@@ -57,7 +59,7 @@ export function FolderList({
             onClick={onNewBlank}
             className="text-xs font-medium text-white/70 transition hover:text-white/85"
           >
-            + New
+            {t("folders.newDb")}
           </button>
           {!addingFolder ? (
             <button
@@ -65,7 +67,7 @@ export function FolderList({
               onClick={() => setAddingFolder(true)}
               className="text-xs font-medium text-white/70 transition hover:text-white/85"
             >
-              + Folder
+              {t("folders.newFolder")}
             </button>
           ) : null}
         </div>
@@ -73,7 +75,7 @@ export function FolderList({
 
       {addingFolder ? (
         <InlineTextInput
-          placeholder="Folder name"
+          placeholder={t("folders.folderNamePlaceholder")}
           onCommit={(name) => {
             onNewFolder(name);
             setAddingFolder(false);
@@ -84,7 +86,7 @@ export function FolderList({
 
       {folders.length === 0 && !addingFolder ? (
         <p className="text-xs leading-relaxed text-white/55">
-          Create a folder to start pinning Notion databases.
+          {t("folders.emptyState")}
         </p>
       ) : null}
 

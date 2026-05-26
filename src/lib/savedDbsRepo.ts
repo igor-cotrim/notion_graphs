@@ -231,7 +231,10 @@ export async function moveSavedDbToFolder(
     .where(and(eq(folders.id, toFolderId), eq(folders.userId, userId)))
     .limit(1);
   if (!targetFolder[0]) {
-    console.error("[moveSavedDbToFolder] Target folder not found", { userId, toFolderId });
+    console.error("[moveSavedDbToFolder] Target folder not found", {
+      userId,
+      toFolderId,
+    });
     throw new Error("Target folder not found");
   }
   const res = await db

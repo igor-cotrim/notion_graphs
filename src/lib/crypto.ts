@@ -9,7 +9,9 @@ function getKey(): Buffer {
   if (!raw) throw new Error("ENCRYPTION_KEY is not set");
   const key = Buffer.from(raw, "hex");
   if (key.length !== 32) {
-    throw new Error("ENCRYPTION_KEY must be 32 bytes hex-encoded (64 hex chars)");
+    throw new Error(
+      "ENCRYPTION_KEY must be 32 bytes hex-encoded (64 hex chars)",
+    );
   }
   return key;
 }
@@ -29,5 +31,7 @@ export function decrypt(packed: string): string {
   const ct = buf.subarray(IV_BYTES + TAG_BYTES);
   const decipher = createDecipheriv(ALGORITHM, getKey(), iv);
   decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(ct), decipher.final()]).toString("utf8");
+  return Buffer.concat([decipher.update(ct), decipher.final()]).toString(
+    "utf8",
+  );
 }

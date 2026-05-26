@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { mintEmbedUrl, refreshDb } from "@/app/actions";
@@ -17,6 +18,8 @@ import {
 import type { FolderTree } from "@/lib/savedDbsRepo";
 import type { Aggregation, ChartType, StoredDbState } from "@/lib/types";
 import { FolderList } from "./folders/FolderList";
+import { Logo } from "./Logo";
+import { useLocale } from "@/hooks/useLocale";
 
 type Filters = Record<string, string[]>;
 
@@ -59,6 +62,7 @@ export function PreviewForm({
   filterOptions: Record<string, string[]>;
   workspaceName: string | null;
 }) {
+  const { t, toggleLocale, localeLabel } = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [refreshing, startRefresh] = useTransition();
@@ -390,25 +394,38 @@ export function PreviewForm({
   }
 
   return (
-    <aside className="flex h-full flex-col gap-5 overflow-y-auto border-r border-[#1e1e1c] bg-[#0c0a09] p-5 text-sm">
+    <aside className="scrollbar-orange flex h-full flex-col gap-5 overflow-y-auto border-r border-[#1e1e1c] bg-[#0c0a09] p-5 text-sm">
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h2 className="font-display text-sm font-semibold text-white">
-            Preview
-          </h2>
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 font-display text-sm font-semibold text-white transition hover:text-white/70"
+          >
+            <Logo className="h-4 w-4 text-[#f97316]" />
+            {t("preview.heading")}
+          </Link>
           {workspaceName ? (
             <p className="mt-0.5 text-xs text-white/70">{workspaceName}</p>
           ) : null}
         </div>
-        <form action="/api/auth/logout" method="post">
+        <div className="flex items-center gap-2">
           <button
-            type="submit"
+            type="button"
+            onClick={toggleLocale}
             className="rounded border border-[#2a2a28] px-2 py-1 text-xs font-medium text-white/70 transition hover:border-[#3a3a38] hover:text-white/85"
           >
-            Sign out
+            {localeLabel}
           </button>
-        </form>
+          <form action="/api/auth/logout" method="post">
+            <button
+              type="submit"
+              className="rounded border border-[#2a2a28] px-2 py-1 text-xs font-medium text-white/70 transition hover:border-[#3a3a38] hover:text-white/85"
+            >
+              {t("preview.signOut")}
+            </button>
+          </form>
+        </div>
       </div>
 
       <FolderList
@@ -431,7 +448,7 @@ export function PreviewForm({
 
       {treeError ? <p className="text-xs text-red-400">{treeError}</p> : null}
 
-      <Field label="Database ID">
+      <Field label={t("preview.databaseId")}>
         <input
           className={inputClass}
           value={state.db}
@@ -440,8 +457,7 @@ export function PreviewForm({
           placeholder="2a046fb23fb5720b0905d3939b79f108"
         />
         <p className="text-xs leading-relaxed text-white/55">
-          Open the database as a full page in Notion, copy the URL. The ID is
-          the 32-character code at the end:{" "}
+          {t("preview.databaseIdHint")}{" "}
           <code className="font-mono text-white/70">
             notion.so/<strong>2a046fb…</strong>
           </code>
@@ -461,29 +477,29 @@ export function PreviewForm({
             ↻
           </span>
           {refreshing
-            ? "Refreshing…"
+            ? t("preview.refreshing")
             : refreshedAt
-              ? "Refreshed"
-              : "Refresh data"}
+              ? t("preview.refreshed")
+              : t("preview.refreshData")}
         </button>
       </Field>
 
-      <Field label="Chart type">
+      <Field label={t("preview.chartType")}>
         <div className="flex gap-1">
-          {(["pie", "bar", "line"] as ChartType[]).map((t) => (
+          {(["pie", "bar", "line"] as ChartType[]).map((ct) => (
             <button
-              key={t}
+              key={ct}
               type="button"
-              onClick={() => patch({ chart: t })}
-              className={pillClass(state.chart === t)}
+              onClick={() => patch({ chart: ct })}
+              className={pillClass(state.chart === ct)}
             >
-              {t}
+              {ct}
             </button>
           ))}
         </div>
       </Field>
 
-      <Field label="Group by">
+      <Field label={t("preview.groupBy")}>
         {groupOptions.length ? (
           <select
             className={inputClass}
@@ -507,7 +523,7 @@ export function PreviewForm({
         )}
       </Field>
 
-      <Field label="Value">
+      <Field label={t("preview.valueField")}>
         {valueOptions.length ? (
           <select
             className={inputClass}
@@ -531,7 +547,7 @@ export function PreviewForm({
         )}
       </Field>
 
-      <Field label="Aggregation">
+      <Field label={t("preview.aggregation")}>
         <div className="flex gap-1">
           {(["sum", "count", "avg"] as Aggregation[]).map((a) => (
             <button
@@ -546,21 +562,26 @@ export function PreviewForm({
         </div>
       </Field>
 
-      <Field label="Title">
+      <Field label={t("preview.titleField")}>
         <input
           className={inputClass}
           value={state.title}
           onChange={(e) => setState({ ...state, title: e.target.value })}
           onBlur={() => pushState(state)}
-          placeholder="(optional)"
+          placeholder={t("preview.titlePlaceholder")}
         />
       </Field>
 
       {Object.entries(filterOptions).map(([prop, options]) => (
-        <Field key={prop} label={`Filter — ${prop}`}>
+        <Field
+          key={prop}
+          label={t("preview.filterLabel").replace("{prop}", prop)}
+        >
           <div className="flex flex-wrap gap-1">
             {options.length === 0 ? (
-              <span className="text-xs text-white/55">no values</span>
+              <span className="text-xs text-white/55">
+                {t("preview.noFilterValues")}
+              </span>
             ) : (
               options.map((opt) => {
                 const active = state.filters[prop]?.includes(opt) ?? false;
@@ -591,25 +612,31 @@ export function PreviewForm({
           {minting ? (
             <>
               <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              Generating…
+              {t("preview.generating")}
             </>
           ) : (
-            "Generate embed URL"
+            t("preview.generateEmbed")
           )}
         </button>
         {!activeSavedDbId && state.db ? (
-          <p className="text-xs text-white/55">
-            Save this database to a folder to generate a stable embed URL.
-          </p>
+          <p className="text-xs text-white/55">{t("preview.saveTip")}</p>
         ) : null}
         {mintErr ? <p className="text-xs text-red-400">{mintErr}</p> : null}
         {minted ? (
           <div className="space-y-2 text-xs">
-            <CopyBlock label="URL" value={minted.url} />
-            <CopyBlock label="Iframe" value={minted.iframe} />
-            <p className="text-white/55">
-              Tip: paste the URL (not the iframe) into Notion → Create embed.
-            </p>
+            <CopyBlock
+              label="URL"
+              value={minted.url}
+              copyLabel={t("preview.copy")}
+              copiedLabel={t("preview.copied")}
+            />
+            <CopyBlock
+              label="Iframe"
+              value={minted.iframe}
+              copyLabel={t("preview.copy")}
+              copiedLabel={t("preview.copied")}
+            />
+            <p className="text-white/55">{t("preview.embedTip")}</p>
           </div>
         ) : null}
       </div>
@@ -646,7 +673,17 @@ function Field({
   );
 }
 
-function CopyBlock({ label, value }: { label: string; value: string }) {
+function CopyBlock({
+  label,
+  value,
+  copyLabel,
+  copiedLabel,
+}: {
+  label: string;
+  value: string;
+  copyLabel: string;
+  copiedLabel: string;
+}) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="rounded border border-[#2a2a28] bg-[#161614] p-2.5">
@@ -663,7 +700,7 @@ function CopyBlock({ label, value }: { label: string; value: string }) {
           }}
           className="rounded bg-[#2a2a28] px-2 py-0.5 text-[10px] font-semibold text-white/75 transition hover:bg-[#3a3a38] hover:text-white/90"
         >
-          {copied ? "copied ✓" : "copy"}
+          {copied ? copiedLabel : copyLabel}
         </button>
       </div>
       <code className="font-mono block break-all text-[11px] leading-relaxed text-white/80">

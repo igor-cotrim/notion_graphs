@@ -1,5 +1,6 @@
 import { ChartRenderer } from "@/components/ChartRenderer";
 import { PreviewForm } from "@/components/PreviewForm";
+import { PreviewHint } from "@/components/PreviewHint";
 import { PreviewLayoutShell } from "@/components/PreviewLayoutShell";
 import { applyFilters, groupAndAggregate } from "@/lib/aggregate";
 import { requireUser } from "@/lib/auth";
@@ -70,38 +71,14 @@ export default async function PreviewPage({
       }
     >
       {!db ? (
-        <Hint>Enter a Notion database ID in the sidebar to begin.</Hint>
+        <PreviewHint variant="no-db" />
       ) : fetchError ? (
-        <Hint tone="error">
-          Failed to load database: {fetchError}
-          <br />
-          Make sure the integration is shared with this database.
-        </Hint>
+        <PreviewHint variant="error" errorMessage={fetchError} />
       ) : rows.length === 0 ? (
-        <Hint>Database is empty.</Hint>
+        <PreviewHint variant="empty" />
       ) : (
         <ChartRenderer type={chart} data={data} title={title || undefined} />
       )}
     </PreviewLayoutShell>
-  );
-}
-
-function Hint({
-  children,
-  tone = "info",
-}: {
-  children: React.ReactNode;
-  tone?: "info" | "error";
-}) {
-  return (
-    <div className="flex h-full items-center justify-center p-8">
-      <p
-        className={`max-w-sm text-center text-sm leading-relaxed ${
-          tone === "error" ? "text-red-500" : "text-zinc-400"
-        }`}
-      >
-        {children}
-      </p>
-    </div>
   );
 }

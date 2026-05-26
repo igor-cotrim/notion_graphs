@@ -1,10 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import type { DragEndEvent } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import type { FolderNode } from "@/lib/savedDbsRepo";
+import { useLocale } from "@/hooks/useLocale";
 import { InlineTextInput } from "./InlineTextInput";
 import { SavedDbTab } from "./SavedDbTab";
 
@@ -41,6 +52,7 @@ export function FolderItem({
   onDeleteDb: (id: string) => void;
   onReorderDbs: (orderedIds: string[]) => void;
 }) {
+  const { t } = useLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -87,7 +99,7 @@ export function FolderItem({
           <div className="flex-1">
             <InlineTextInput
               initial={folder.name}
-              placeholder="Folder name"
+              placeholder={t("folders.folderNamePlaceholder")}
               onCommit={(name) => {
                 onRenameFolder(name);
                 setRenaming(false);
@@ -130,7 +142,7 @@ export function FolderItem({
                     }}
                     className="block w-full px-2.5 py-1.5 text-left text-white/85 hover:bg-[#2a2a28] hover:text-white"
                   >
-                    Rename folder
+                    {t("folders.renameFolder")}
                   </button>
                   <button
                     type="button"
@@ -140,7 +152,7 @@ export function FolderItem({
                     }}
                     className="block w-full border-t border-[#2a2a28] px-2.5 py-1.5 text-left text-red-400 hover:bg-[#2a2a28]"
                   >
-                    Delete folder
+                    {t("folders.deleteFolder")}
                   </button>
                 </div>
               ) : null}
@@ -152,9 +164,14 @@ export function FolderItem({
       {confirmingDelete ? (
         <div className="flex items-center gap-2 rounded border border-red-400/30 bg-red-400/5 px-2 py-1.5">
           <span className="flex-1 text-[11px] text-red-400/80">
-            {folder.dbs.length > 0
-              ? `Delete folder and its ${folder.dbs.length} DB${folder.dbs.length === 1 ? "" : "s"}?`
-              : "Delete this folder?"}
+            {folder.dbs.length === 0
+              ? t("folders.deleteFolderEmpty")
+              : folder.dbs.length === 1
+                ? t("folders.deleteFolderWithDb").replace("{count}", "1")
+                : t("folders.deleteFolderWithDbs").replace(
+                    "{count}",
+                    String(folder.dbs.length),
+                  )}
           </span>
           <button
             type="button"
@@ -164,14 +181,14 @@ export function FolderItem({
             }}
             className="rounded bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white transition hover:bg-red-600"
           >
-            Delete
+            {t("folders.delete")}
           </button>
           <button
             type="button"
             onClick={() => setConfirmingDelete(false)}
             className="text-[11px] text-white/70 transition hover:text-white/85"
           >
-            Cancel
+            {t("folders.cancel")}
           </button>
         </div>
       ) : null}
@@ -204,7 +221,7 @@ export function FolderItem({
           {savingNew ? (
             <InlineTextInput
               initial=""
-              placeholder="Label (e.g. Budget 04/2026)"
+              placeholder={t("folders.saveLabelPlaceholder")}
               onCommit={(label) => {
                 onSaveCurrent(label);
                 setSavingNew(false);
@@ -217,7 +234,7 @@ export function FolderItem({
               onClick={() => setSavingNew(true)}
               className="self-start text-[11px] font-medium text-white/65 transition hover:text-white/85"
             >
-              + Save current DB
+              {t("folders.saveCurrentDb")}
             </button>
           ) : null}
         </div>

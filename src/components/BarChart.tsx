@@ -4,8 +4,8 @@ import { ResponsiveBar } from "@nivo/bar";
 import type { AggregatedPoint } from "@/lib/types";
 import { fmtNumber, fmtPct, totalOf } from "@/lib/format";
 import { useContainerWidth } from "@/hooks/useContainerWidth";
-import { PALETTE } from "./palette";
-import { nivoTheme } from "./nivoTheme";
+import { PALETTE } from "@/lib/palette";
+import { nivoTheme } from "@/lib/nivoTheme";
 
 const tooltipStyle = {
   background: "#fff",
@@ -34,7 +34,12 @@ export function BarChart({ data }: { data: AggregatedPoint[] }) {
           theme={nivoTheme}
           keys={["value"]}
           indexBy="label"
-          margin={{ top: 16, right: 16, bottom: bottomMargin, left: leftMargin }}
+          margin={{
+            top: 16,
+            right: 16,
+            bottom: bottomMargin,
+            left: leftMargin,
+          }}
           padding={0.32}
           colors={({ index }) => PALETTE[(index as number) % PALETTE.length]}
           borderRadius={5}
@@ -80,8 +85,8 @@ export function BarChart({ data }: { data: AggregatedPoint[] }) {
                   {String(indexValue)}
                 </div>
                 <div style={{ color: "#6b7280" }}>
-                  {fmtNumber(value)}{" "}
-                  <span style={{ color: "#d4d4d8" }}>·</span> {fmtPct(pct)}
+                  {fmtNumber(value)} <span style={{ color: "#d4d4d8" }}>·</span>{" "}
+                  {fmtPct(pct)}
                 </div>
               </div>
             );

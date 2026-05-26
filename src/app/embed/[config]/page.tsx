@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { ChartRenderer } from "@/components/ChartRenderer";
+import { EmbedError } from "@/components/EmbedError";
 import { applyFilters, groupAndAggregate } from "@/lib/aggregate";
 import { decodeConfig, decodeEmbedRef } from "@/lib/config";
 import { queryDatabase } from "@/lib/notion";
 import { loadSavedDbForEmbed } from "@/lib/savedDbsRepo";
+import type { TranslationKey } from "@/lib/locale";
 import type { EmbedConfig } from "@/lib/types";
 
 function getBaseUrl(): string {
@@ -36,14 +38,14 @@ export default async function EmbedPage({
   const { config: token } = await params;
 
   let config: EmbedConfig | null = null;
-  let unavailable: string | null = null;
+  let unavailable: TranslationKey | null = null;
   try {
     const ref = decodeEmbedRef(token);
     const row = await loadSavedDbForEmbed(ref.savedDbId);
     if (!row || row.userId !== ref.userId) {
-      unavailable = "This chart is no longer available.";
+      unavailable = "embed.unavailable";
     } else if (!row.state) {
-      unavailable = "This chart has no saved state yet.";
+      unavailable = "embed.noState";
     } else {
       config = {
         userId: row.userId,
@@ -60,12 +62,12 @@ export default async function EmbedPage({
     try {
       config = decodeConfig(token);
     } catch {
-      unavailable = "Invalid embed token.";
+      unavailable = "embed.invalidToken";
     }
   }
 
-  if (unavailable) return <EmbedMessage>{unavailable}</EmbedMessage>;
-  if (!config) return <EmbedMessage>Invalid embed token.</EmbedMessage>;
+  if (unavailable) return <EmbedError messageKey={unavailable} />;
+  if (!config) return <EmbedError messageKey="embed.invalidToken" />;
 
   let data;
   try {
@@ -78,25 +80,12 @@ export default async function EmbedPage({
       config.agg ?? "sum",
     );
   } catch {
-    return (
-      <EmbedMessage>
-        This chart is no longer available — the owner disconnected their Notion
-        workspace.
-      </EmbedMessage>
-    );
+    return <EmbedError messageKey="embed.disconnected" />;
   }
 
   return (
     <main className="h-dvh min-h-[500px] w-full bg-white">
       <ChartRenderer type={config.chart} data={data} title={config.title} />
-    </main>
-  );
-}
-
-function EmbedMessage({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex h-dvh min-h-[200px] w-full items-center justify-center bg-white p-6 text-center text-sm text-gray-500">
-      {children}
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Outfit, Syne } from "next/font/google";
+import { LocaleProvider } from "@/hooks/LocaleProvider";
 import "./globals.css";
 
 const syne = Syne({
@@ -64,7 +65,9 @@ export default function RootLayout({
       lang="en"
       className={`${syne.variable} ${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <LocaleProvider>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }
